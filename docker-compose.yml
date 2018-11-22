@@ -1,0 +1,62 @@
+version: "3"
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.3
+    container_name: suhail-elasticsearch
+    restart: always
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - elasticsearch-network
+  
+  logstash:
+    image: docker.elastic.co/logstash/logstash:6.4.3
+    container_name: suhail-logstash
+    restart: always
+    environment:
+      - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
+    volumes:
+      - logstash-data:/usr/share/logstash/data
+    ports:
+      - 5000:5000
+      - 9600:9600
+    networks:
+      - elasticsearch-network
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.4.3
+    container_name: suhail-kibana
+    restart: always
+    volumes:
+      - kibana-data:/usr/share/kibana/data
+    ports:
+      - 5601:5601
+    networks:
+      - elasticsearch-network
+    depends_on:
+      - elasticsearch
+
+volumes:
+  elasticsearch-data:
+    driver: local
+  logstash-data:
+    driver: local
+  kibana-data:
+    driver: local
+
+networks:
+  elasticsearch-network:
+    driver: bridge
